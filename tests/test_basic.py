@@ -31,9 +31,9 @@ def api_checksum_mock():
         else:
             rawauth = "{}\n{}\n{}\n{}\n".format(method, endpoint, formatdate(usegmt=True), url)
 
-        rawauth = hmac.new(bytes(e24py.sess.APISECRET, 'utf-8'), bytes(rawauth, 'utf-8'), hashlib.sha256).digest()
+        rawauth = hmac.new(bytes(e24py.session.APISECRET, 'utf-8'), bytes(rawauth, 'utf-8'), hashlib.sha256).digest()
         authstring = (base64.b64encode(rawauth))
-        complete = bytes(e24py.sess.APIKEY, 'utf-8') + b':' + authstring
+        complete = bytes(e24py.session.APIKEY, 'utf-8') + b':' + authstring
         
         return complete
     return _api_call_mock
@@ -72,8 +72,8 @@ class Test_session_initialization():
         assert e24py.E24sess.default_session == test_inst_3
     
 
-@mock.patch("e24py.sess.APIKEY", "access_key")
-@mock.patch("e24py.sess.APISECRET", "secret_key")
+@mock.patch("e24py.session.APIKEY", "access_key")
+@mock.patch("e24py.session.APISECRET", "secret_key")
 class Test_Api_call():
     """Tests e24py.E24sess.api_request and request_dispatch  method."""
     @responses.activate
@@ -127,9 +127,9 @@ class Test_Api_call():
         responses.add(responses.GET, "https://eu-poland-1poznan.api.e24cloud.com/v2/virtual-machines-1", json={'success': False}, status=200)
         responses.add(responses.GET, "https://eu-poland-1poznan.api.e24cloud.com/v2/virtual-machines-2", status=404)
         
-        with pytest.raises(e24py.sess.ApiRequestFailed):
+        with pytest.raises(e24py.session.ApiRequestFailed):
             r1 = session_setup.api_request('GET', '/v2/virtual-machines-1')
-        with pytest.raises(e24py.sess.ApiRequestFailed):
+        with pytest.raises(e24py.session.ApiRequestFailed):
             r2 = session_setup.api_request('GET', '/v2/virtual-machines-2')  
 
 
@@ -169,7 +169,7 @@ class Test_session_utilities():
     def test_resource_search_by_id_no_resource(self, session_setup):
         
         session_setup.api_request = mock.MagicMock()
-        session_setup.api_request.side_effect = e24py.sess.ApiRequestFailed()
+        session_setup.api_request.side_effect = e24py.session.ApiRequestFailed()
         
         r2 = session_setup.resource_search(type='virtual_machine', id="nonexistent_id")
         

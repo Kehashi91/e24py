@@ -22,10 +22,16 @@ TYPEMAP = {
 
 
 class ApiRequestFailed(Exception):
+    """Generic exception on non 2xx API response"""
     pass
 
 
 class E24sess():
+    """
+    Session class encapsulating all methods tied to making actual requests and other non-resource tied utlilites.
+    Registers all created API objects within a dictionary. Also creates a single requests.Session for use in all API 
+    calls.
+    """
     default_session = None
 
     def __init__(self, endpoint="dc1", set_default=True):
@@ -130,6 +136,8 @@ class E24sess():
         r = self.api_request('PUT', "/v2/virtual-machines", params)
         print(r.json())
         return r.json()["virtual_machine"]["id"]
+
+
 
     def get_os(self):
         """

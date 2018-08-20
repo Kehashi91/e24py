@@ -1,14 +1,12 @@
-
-
-import json
-
-
-from .sess import E24sess, ApiRequestFailed, TYPEMAP
+from .session import E24sess, ApiRequestFailed, TYPEMAP
 
 
 
 class ApiObject():
-
+    """
+    Base class that includes all methods and properties common for API resources. Also includes handler for proper 
+    session object.
+    """
     @staticmethod
     def session_handler(session):
         """
@@ -73,7 +71,9 @@ class ApiObject():
 
 
 class VirtualMachine(ApiObject):
-    
+    """
+    Represents a vm resource
+    """
     
     def __init__(self, id='', label='', session=None):
         super(VirtualMachine, self).__init__(type='virtual_machine', id=id, label=label, session=session)
@@ -89,7 +89,7 @@ class VirtualMachine(ApiObject):
 
         for volume in self.storage_volumes:
 
-            del self.session.objects[volume['id']] #Volume is deleted, we tidy up conn.objects
+            del self.session.objects[volume.id] #Volume is deleted, we tidy up conn.objects
 
     def power_on(self):
         r = self.session.api_request('POST', "/v2/virtual-machines/{}/poweron".format(self.id))
@@ -108,9 +108,10 @@ class VirtualMachine(ApiObject):
 
 
 
-
-
 class StorageVolume(ApiObject):
+    """
+    Represents a storage resource.
+    """
 
     def __init__(self,  id='', label=''):
         super(StorageVolume, self).__init__(type='storage_volume', id=id, label=label)
@@ -119,11 +120,15 @@ class StorageVolume(ApiObject):
     def update(self):
         super(StorageVolume, self).update(id=self.id)
     
-    def attach(self):
-        pass
+    def attach(self, vmid):
+
+        data = {"virtual_machine_id": vmid}
+
+        r = self.session.api_request('POST', "/v2/storage-volumes/{}/attach".format(self.id), data)
         
     def detach(self):
-        pass
+
+        r = self.session.api_request('POST', "/v2/storage-volumes/{}/detach".format(self.id))
 
 
 class IpAdress(ApiObject):
