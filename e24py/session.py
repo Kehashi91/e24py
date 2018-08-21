@@ -79,7 +79,7 @@ class E24sess():
             out.write("status:\n")
             out.write(str(request.status_code))
             out.write("response:\n")
-            #Zjson.dump(request.json(), out)
+            #json.dump(request.json(), out)
             out.write("\n")
 
 
@@ -143,7 +143,7 @@ class E24sess():
         """
         Zwraca sformatowany słownik obrazów systemowych, gdzie kluczem jest id obrazu
         """
-        r = self.api_request('GET', "/v2/templates")
+        r = self.api_request('GET', "/v2/templates", "kek")
 
         r = r.json()["templates"]
 

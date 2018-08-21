@@ -164,6 +164,7 @@ class Test_session_utilities():
         r = session_setup.resource_search(type='virtual_machine', id="test_vm_id")
         
         assert r == data["test_resource_search_by_id_1"]['virtual_machine']
+        session_setup.api_request.assert_called_once_with('GET', "/v2/virtual-machines/test_vm_id")
     
     @responses.activate        
     def test_resource_search_by_id_no_resource(self, session_setup):
@@ -174,11 +175,12 @@ class Test_session_utilities():
         r2 = session_setup.resource_search(type='virtual_machine', id="nonexistent_id")
         
         assert not r2
+        session_setup.api_request.assert_called_once_with('GET', "/v2/virtual-machines/nonexistent_id")
     
     @responses.activate   
     def test_resource_search_by_label_single_resource(self, session_setup, api_call_mock):
     
-        rv, data = api_call_mock("test_resource_search_by_label_1")
+        rv, data = api_call_mock("test_resource_search_by_label_1")#reusing existing data entry
         
         session_setup.api_request = mock.MagicMock()
         session_setup.api_request.return_value = rv
@@ -186,6 +188,61 @@ class Test_session_utilities():
         r = session_setup.resource_search(type='virtual_machine', label="test_label")
         
         assert r == data["test_resource_search_by_label_1"]['virtual_machines'][0]
+        session_setup.api_request.assert_called_once_with('GET', "/v2/virtual-machines")
+        
+    @responses.activate           
+    def test_resource_search_by_label_multiple_resources(self, session_setup, api_call_mock):
+        
+        rv, data = api_call_mock("test_resource_search_by_multiple_resources")
+        
+        session_setup.api_request = mock.MagicMock()
+        session_setup.api_request.return_value = rv
 
-
-
+        r = session_setup.resource_search(type='virtual_machine', label="test_label_correct")
+        
+        assert r == data["test_resource_search_by_multiple_resources"]['virtual_machines'][1]
+        session_setup.api_request.assert_called_once_with('GET', "/v2/virtual-machines")
+    
+    @responses.activate 
+    def test_create_vm(self, session_setup, api_call_mock):
+    
+        rv, data = api_call_mock("test_create_vm")
+        
+        session_setup.api_request = mock.MagicMock()
+        session_setup.api_request.return_value = rv
+        
+        r = session_setup.create_vm("test_vm", 2, 1024)
+        
+        expected_data = { #data that is meant to be sent to api_request by tested method
+            "create_vm": {
+                "cpus": 2,
+                "ram": 1024,
+                "zone_id": "24e12e20-0851-5354-e2c3-04b16c4c9c45",
+                "name": "test_vm",
+                "boot_type": "image",
+                "os": "2599",
+                "password": "placeholder123placeholder123",
+            }
+        } 
+        
+        assert r == "test_create_vm"
+        session_setup.api_request.assert_called_once_with('PUT', "/v2/virtual-machines", expected_data)
+    
+class Test_Api_objects():
+    """Tests e24py.Apiobjects instancing and methods. We skip testing ApiObject class, as it is not called directly."""
+    
+    @responses.activate
+    def test_storage_volume(self, session_setup, api_call_mock):
+        
+        rv, data = api_call_mock("test_create_storage")
+            
+        session_setup.resource_search = mock.MagicMock()
+        session_setup.resource_search.return_value = rv.json()
+        
+        storage = e24py.StorageVolume(id="test_storage_id", session=session_setup)
+        
+        assert storage.id == "test_storage_id"
+        assert storage.data == data["test_create_storage"]
+        assert storage.label == None
+        assert storage.size == 40
+        session_setup.resource_search.assert_called_once_with('storage_volume', "test_storage_id", '')

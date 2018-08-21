@@ -32,6 +32,7 @@ class ApiObject():
         request = self.session.resource_search(type, id, label)
         if not request:
             raise ApiRequestFailed("No resource found!")
+        print (request)
         
         
         self.data = request
@@ -113,8 +114,8 @@ class StorageVolume(ApiObject):
     Represents a storage resource.
     """
 
-    def __init__(self,  id='', label=''):
-        super(StorageVolume, self).__init__(type='storage_volume', id=id, label=label)
+    def __init__(self,  id='', label='', session=None):
+        super(StorageVolume, self).__init__(type='storage_volume', id=id, label=label, session=session)
         self.size = self.data['size']
 
     def update(self):
