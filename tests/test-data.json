@@ -1,4 +1,4 @@
-{
+{"placeholder_success": {"success":true},
 	"test_resource_search_by_id_1": {
 		"success": true,
 		"virtual_machine": {
@@ -230,7 +230,7 @@
       "id": "test_create_vm"
   }
 },
-"test_create_storage":{  
+"test_storage":{
       "id":"test_storage_id",
       "label":null,
       "size":40,
@@ -249,9 +249,36 @@
 
       ],
       "virtual_machine":{  
-         "id":"fd5f75ac-f9f2-4b0c-9e87-847b07e89f1a",
+         "id":"test_vm_id",
          "label":"test_vm_label"
       },
       "attach_time":"2017-08-17 21:53:34"
+   },
+	"test_storage_updated":{
+		"success":true,
+		"storage_volume":{
+      "id":"test_storage_id",
+      "label":"updated_label",
+      "size":60,
+      "cost_per_hour":null,
+      "system_disk":true,
+      "type":"hdd",
+      "owner":{
+         "id":"test_owner_id",
+         "name":"test_owner_name"
+      },
+      "zone":{
+         "id":"24e12e20-0851-5354-e2c3-04b16c4c9c45",
+         "name":"EU/POZ-1"
+      },
+      "task":[
+
+      ],
+      "virtual_machine":{
+         "id":"test_vm_id-2",
+         "label":"test_vm_label-2"
+      },
+      "attach_time":"2018-08-17 21:53:34"
+		}
    }
 }
