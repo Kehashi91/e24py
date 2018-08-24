@@ -1,3 +1,12 @@
+"""
+Contains E24sess class and related exceptions. 
+
+E24sess contains all methods that directly interacts with the API,
+leaving high-level abstractions ApiObject classes. It also contains
+a range of utility methods that interact with the API. 
+"""
+
+
 import requests
 
 import hmac, hashlib, base64
@@ -6,19 +15,7 @@ import os
 
 from email.utils import formatdate
 
-APIKEY = os.getenv("E24_KEY")
-APISECRET = os.getenv("E24_SECRET")
-
-ENDPOINTS = {"dc1":"eu-poland-1poznan.api.e24cloud.com","dc2":"eu-poland-2poznan.api.e24cloud.com"}
-
-"""
-Poniższa stała rozwiązuje kwestie liczby pojedyńczej/mnogiej w wypadku requestów o listowanie zasobów vs requestów
-ze wskazanym konkretnym ID
-"""
-TYPEMAP = {
-    'virtual_machine':{'urlname':'virtual-machines', 'jsonname':'virtual_machines'},
-    'storage_volume':{'urlname':'storage-volumes', 'jsonname':'storage_volumes'},
-           }
+from .globals import APIKEY, APISECRET, ENDPOINTS, TYPEMAP
 
 
 class ApiRequestFailed(Exception):
@@ -35,42 +32,49 @@ class E24sess():
     default_session = None
 
     def __init__(self, endpoint="dc1", set_default=True):
-        self.session = requests.Session()  # request.Session() polaczona na stale z jednym obiektem
+        self.session = requests.Session()  # Single request.Session() bound to instance
         self.endpoint = ENDPOINTS[endpoint]
         self.objects = {}
-        if set_default:
+        if set_default: 
             E24sess.default_session = self
 
     def api_request(self, method, path, data=None):
+        """
+        This method creates a valid authorization header, and prepares all data requeired to make an API request. It passess
+        the data to request_dispatch that handles actually sending the request.
+        """
 
         url = "https://{}{}".format(self.endpoint, path)
+
         if data:
-            rawauth = "{}\n{}\n{}\n{}\n{}".format(method, self.endpoint, formatdate(usegmt=True), path,
+            authstring = "{}\n{}\n{}\n{}\n{}".format(method, self.endpoint, formatdate(usegmt=True), path,
                                                   json.dumps(data))
         else:
-            rawauth = "{}\n{}\n{}\n{}\n".format(method, self.endpoint, formatdate(usegmt=True), path)
+            authstring = "{}\n{}\n{}\n{}\n".format(method, self.endpoint, formatdate(usegmt=True), path)
 
-        print(rawauth)
-        rawauth = hmac.new(bytes(APISECRET, 'utf-8'), bytes(rawauth, 'utf-8'), hashlib.sha256).digest()
-        authstring = (base64.b64encode(rawauth))
+        authstring = hmac.new(bytes(APISECRET, 'utf-8'), bytes(authstring, 'utf-8'), hashlib.sha256).digest()
+        authstring = (base64.b64encode(authstring))
 
-        complete = bytes(APIKEY, 'utf-8') + b':' + authstring
+        authstring = bytes(APIKEY, 'utf-8') + b':' + authstring
 
-        headers = {'Content-type': 'application/json', 'X-Date': formatdate(usegmt=True), 'Authorization': complete}
+        headers = {'Content-type': 'application/json', 'X-Date': formatdate(usegmt=True), 'Authorization': authstring}
 
         return self.request_dispatch(method, headers, url, data)
 
     def request_dispatch(self, method, headers, url, data):
+        """
+        Sends the request prepared by previous method and makes sure the response from the server is valid and succeded
+        """
         methods = {"GET", "POST", "PUT", "DELETE"}
 
-        if not method in methods:
-            raise ValueError("wrong method")
+        if method not in methods:
+            raise ValueError("Unrecognized method: {}".format(method))
         request = requests.Request(method, url, headers=headers, json=data)
         request = self.session.prepare_request(request)
         request = self.session.send(request)
         
    
-        #zapisywanie do pliku
+        #write to file (TODO: move to debug mode)
         with open('data.json', 'a') as out:
             out.write("url:\n")
             out.write(url)
@@ -79,22 +83,23 @@ class E24sess():
             out.write("status:\n")
             out.write(str(request.status_code))
             out.write("response:\n")
-            #json.dump(request.json(), out)
+            json.dump(request.json(), out)
             out.write("\n")
 
 
-        if request.status_code == 404:  # konieczny dodatkowy warunek, w innym przypadku trzymamy JSON Decode error
+        if request.status_code == 404:  # Necessary before we access request.json() to avoid JSONDecodeError
             raise ApiRequestFailed("Status Code: {} \n No Json response".format(request.status_code))
-        elif request.json()['success'] == False or not request.ok:
+        elif request.json()['success'] != True or not request.ok:
             raise ApiRequestFailed(("Status Code: {} \n Response: \n {}").format(request.json(), request.status_code))
         else:
             return request
 
     def resource_search(self, type, id=None, label=None):
         """
-        Generic search function, returns uniformally formatted json responses independently.
+        Generic search function, returns uniformally formatted json responses independently. As a search function,
+        it handles not finding a resources simply by returning False, not an exception.
 
-        BUG: w przypadku wyszukiwania po labelu i istnieniu wielu elementów o tym samym labelu, zostanie zwrócony pierwszy z nich.
+        BUG(minor): In case of many resources with same label, only the first one will be returned
         """
         if id:
             url = "/v2/{}/{}".format(TYPEMAP[type]['urlname'], id)
@@ -120,6 +125,10 @@ class E24sess():
             raise ValueError('No ID or label provided.')
 
     def create_vm(self, name, cpu, memory):
+        """This method is used to request the API to create a new vm. As the response
+        for this request contains only vm id, it is insufficient to instantiate a VirtualMachine
+        object. It also canno call VirtualMachine contructor right after an ID is returned, as there
+        is a significant delay befor e24 cloud actually creates a valid resource."""
 
         params = {
             "create_vm": {
@@ -141,7 +150,8 @@ class E24sess():
 
     def get_os(self):
         """
-        Zwraca sformatowany słownik obrazów systemowych, gdzie kluczem jest id obrazu
+        Returns a dictionary where temlates id are the keys. Temporary until proper
+        ApiObject for templates is introduced.
         """
         r = self.api_request('GET', "/v2/templates", "kek")
 

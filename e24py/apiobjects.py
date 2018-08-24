@@ -1,4 +1,11 @@
-from .session import E24sess, ApiRequestFailed, TYPEMAP
+"""
+Contains ApiObjec and its subclasses. Creates high-level representation
+for for API resources, and interacts with the API through e24sess class.
+"""
+
+
+from .session import E24sess, ApiRequestFailed
+from .globals import TYPEMAP
 
 
 
@@ -10,7 +17,7 @@ class ApiObject():
     @staticmethod
     def session_handler(session):
         """
-        Handler do ustawienia sesji przy inicjalizacji obiektu
+        Handler for setting a session tied to created instance.
         """
         if not session and not E24sess.default_session:
             raise ValueError('No session set')
@@ -119,7 +126,7 @@ class StorageVolume(ApiObject):
         self.size = self.data['size']
 
     def update(self):
-        super(StorageVolume, self).update(id=self.id)
+        super(StorageVolume, self).update()
     
     def attach(self, vmid):
 
@@ -132,9 +139,10 @@ class StorageVolume(ApiObject):
         r = self.session.api_request('POST', "/v2/storage-volumes/{}/detach".format(self.id))
 
 
-class IpAdress(ApiObject):
+class DiscImage(ApiObject):
 
-    pass
+    def __init__(self,  id='', label='', session=None):
+        super( DiscImage, self).__init__(type='disk_image', id=id, label=label, session=session)
     
 
     
