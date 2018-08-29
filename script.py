@@ -3,10 +3,9 @@ import e24py
 from time import sleep
 
 
-d1 = e24py.E24sess(endpoint="dc1")
+d1 = e24py.E24sess(endpoint="EU/POZ-1")
 #vm = e24py.VirtualMachine(label="JurnyJanusz2")
 
-back = e24py.DiscImage(id="3de3ce5f-aa9b-4f1e-9800-ecd37977ca7a")
-#stor.detach()
 
-
+d1.create_vm("nohej2", 1, 512)
+d1.create_vm("nohej", 1, 512)

@@ -1,5 +1,4 @@
-"""
-Contains ApiObjec and its subclasses. Creates high-level representation
+"""Contains ApiObject and its subclasses. Creates high-level representation
 for for API resources, and interacts with the API through e24sess class.
 """
 
@@ -10,15 +9,12 @@ from .globals import TYPEMAP
 
 
 class ApiObject():
-    """
-    Base class that includes all methods and properties common for API resources. Also includes handler for proper 
+    """Base class that includes all methods and properties common for API resources. Also includes handler for proper 
     session object.
     """
     @staticmethod
     def session_handler(session):
-        """
-        Handler for setting a session tied to created instance.
-        """
+        """Handler for setting a session tied to created instance."""
         if not session and not E24sess.default_session:
             raise ValueError('No session set')
         elif type(session) is E24sess:
@@ -79,9 +75,7 @@ class ApiObject():
 
 
 class VirtualMachine(ApiObject):
-    """
-    Represents a vm resource
-    """
+    """Represents a vm resource."""
     
     def __init__(self, id='', label='', session=None):
         super(VirtualMachine, self).__init__(type='virtual_machine', id=id, label=label, session=session)
@@ -89,9 +83,6 @@ class VirtualMachine(ApiObject):
         self.ram = self.data['ram']
         self.storage_volumes = [StorageVolume(storage['id']) for storage in self.data['storage_volumes']]
 
-    def update(self):
-        super(VirtualMachine, self).update()
-        
     def delete(self):
         super(VirtualMachine, self).delete()
 
@@ -112,37 +103,34 @@ class VirtualMachine(ApiObject):
     def resize(self, cores, memory):
         resize_amount = {"cores": cores, "ram": memory}
 
-        r = self.session.api_request('POST', "/v2/virtual-machines/{}/resize".format(self.id), resize_amount)
+        self.session.api_request('POST', "/v2/virtual-machines/{}/resize".format(self.id), resize_amount)
 
 
 
 class StorageVolume(ApiObject):
-    """
-    Represents a storage resource.
-    """
+    """Represents a storage resource."""
 
     def __init__(self,  id='', label='', session=None):
         super(StorageVolume, self).__init__(type='storage_volume', id=id, label=label, session=session)
         self.size = self.data['size']
 
-    def update(self):
-        super(StorageVolume, self).update()
     
     def attach(self, vmid):
 
         data = {"virtual_machine_id": vmid}
 
-        r = self.session.api_request('POST', "/v2/storage-volumes/{}/attach".format(self.id), data)
+        self.session.api_request('POST', "/v2/storage-volumes/{}/attach".format(self.id), data)
         
     def detach(self):
 
-        r = self.session.api_request('POST', "/v2/storage-volumes/{}/detach".format(self.id))
+        self.session.api_request('POST', "/v2/storage-volumes/{}/detach".format(self.id))
 
 
 class DiscImage(ApiObject):
+    """Represents a disc image resource."""
 
     def __init__(self,  id='', label='', session=None):
-        super( DiscImage, self).__init__(type='disk_image', id=id, label=label, session=session)
+        super(DiscImage, self).__init__(type='disk_image', id=id, label=label, session=session)
     
 
     

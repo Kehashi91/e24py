@@ -1,5 +1,4 @@
-"""
-Contains E24sess class and related exceptions. 
+"""Contains E24sess class and related exceptions. 
 
 E24sess contains all methods that directly interacts with the API,
 leaving high-level abstractions ApiObject classes. It also contains
@@ -27,22 +26,23 @@ class E24sess():
     """
     Session class encapsulating all methods tied to making actual requests and other non-resource tied utlilites.
     Registers all created API objects within a dictionary. Also creates a single requests.Session for use in all API 
-    calls.
-    """
+    calls."""
+
     default_session = None
 
-    def __init__(self, endpoint="dc1", set_default=True):
+    def __init__(self, endpoint="EU/POZ-1", set_default=True):
         self.session = requests.Session()  # Single request.Session() bound to instance
-        self.endpoint = ENDPOINTS[endpoint]
+        self.endpoint_label = endpoint
+        self.endpoint = ENDPOINTS[self.endpoint_label]
         self.objects = {}
+        self.zone = None #lazy init
         if set_default: 
             E24sess.default_session = self
 
     def api_request(self, method, path, data=None):
         """
         This method creates a valid authorization header, and prepares all data requeired to make an API request. It passess
-        the data to request_dispatch that handles actually sending the request.
-        """
+        the data to request_dispatch that handles actually sending the request."""
 
         url = "https://{}{}".format(self.endpoint, path)
 
@@ -54,7 +54,6 @@ class E24sess():
 
         authstring = hmac.new(bytes(APISECRET, 'utf-8'), bytes(authstring, 'utf-8'), hashlib.sha256).digest()
         authstring = (base64.b64encode(authstring))
-
         authstring = bytes(APIKEY, 'utf-8') + b':' + authstring
 
         headers = {'Content-type': 'application/json', 'X-Date': formatdate(usegmt=True), 'Authorization': authstring}
@@ -62,8 +61,8 @@ class E24sess():
         return self.request_dispatch(method, headers, url, data)
 
     def request_dispatch(self, method, headers, url, data):
-        """
-        Sends the request prepared by previous method and makes sure the response from the server is valid and succeded
+        """Sends the request prepared by previous method and makes sure the response from the server is valid and 
+        succeded.
         """
         methods = {"GET", "POST", "PUT", "DELETE"}
 
@@ -83,7 +82,7 @@ class E24sess():
             out.write("status:\n")
             out.write(str(request.status_code))
             out.write("response:\n")
-            json.dump(request.json(), out)
+            #json.dump(request.json(), out)
             out.write("\n")
 
 
@@ -94,12 +93,12 @@ class E24sess():
         else:
             return request
 
+
     def resource_search(self, type, id=None, label=None):
-        """
-        Generic search function, returns uniformally formatted json responses independently. As a search function,
+        """Generic search function, returns uniformally formatted json responses independently. As a search function,
         it handles not finding a resources simply by returning False, not an exception.
 
-        BUG(minor): In case of many resources with same label, only the first one will be returned
+        BUG(minor): In case of many resources with same label, only the first one will be returned.
         """
         if id:
             url = "/v2/{}/{}".format(TYPEMAP[type]['urlname'], id)
@@ -124,17 +123,34 @@ class E24sess():
         else:
             raise ValueError('No ID or label provided.')
 
+    def _set_zone(self):
+        """This function sets proper zone id for selected endpoint. This attribute is initalized lazily since for the time
+        being only create_vm method needs zone information, and as such first use of create_vm() runs this method.
+        """
+
+        r = self.api_request("GET", '/v2/regions')
+
+        for zone in r.json()['regions']:
+            if zone['zones'][0]['label'] == self.endpoint_label:
+                self.zone = zone['zones'][0]['id']
+        if not self.zone:
+            raise ApiRequestFailed("Endpoint {} zone info not found:\njson info:\n{}".format(self.endpoint, r.json()))
+
+
     def create_vm(self, name, cpu, memory):
         """This method is used to request the API to create a new vm. As the response
         for this request contains only vm id, it is insufficient to instantiate a VirtualMachine
-        object. It also canno call VirtualMachine contructor right after an ID is returned, as there
-        is a significant delay befor e24 cloud actually creates a valid resource."""
+        object. It also cannot call VirtualMachine contructor right after an ID is returned, as there
+        is a significant delay before e24 cloud actually creates a valid resource.
+        """
+        if not self.zone:
+            self._set_zone()
 
         params = {
             "create_vm": {
                 "cpus": cpu,
                 "ram": memory,
-                "zone_id": "24e12e20-0851-5354-e2c3-04b16c4c9c45",
+                "zone_id": self.zone,
                 "name": name,
                 "boot_type": "image",
                 "os": "2599",
@@ -149,8 +165,7 @@ class E24sess():
 
 
     def get_os(self):
-        """
-        Returns a dictionary where temlates id are the keys. Temporary until proper
+        """Returns a dictionary where temlates id are the keys. Temporary until proper
         ApiObject for templates is introduced.
         """
         r = self.api_request('GET', "/v2/templates", "kek")

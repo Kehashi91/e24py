@@ -1,13 +1,12 @@
-"""
-File for all constants and enviroment-dependent data.
-
+"""File for all constants and enviroment-dependent data.
 """
 import os
 
 APIKEY = os.getenv("E24_KEY")
 APISECRET = os.getenv("E24_SECRET")
 
-ENDPOINTS = {"dc1":"eu-poland-1poznan.api.e24cloud.com","dc2":"eu-poland-2poznan.api.e24cloud.com"}
+ENDPOINTS = {"EU/POZ-1":"eu-poland-1poznan.api.e24cloud.com","EU/POZ-2":"eu-poland-2poznan.api.e24cloud.com"}
+# Endpoints keys are meant to be consistent with /v2/zones labels
 
 """
 TYPEMAP solves discrepectancy in singular/plural resources names when we use GET methods with ID (singular)

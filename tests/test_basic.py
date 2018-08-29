@@ -39,7 +39,7 @@ def session_setup(request):
 
     request.addfinalizer(finalizer)
 
-    return e24py.E24sess('dc1', set_default=False)
+    return e24py.E24sess("EU/POZ-1", set_default=False)
 
 
 @pytest.fixture()
@@ -121,15 +121,15 @@ class TestSessionInitialization:
 
         assert not e24py.E24sess.default_session
 
-        test_inst_2 = e24py.E24sess('dc1', set_default=True)
+        test_inst_2 = e24py.E24sess("EU/POZ-1", set_default=True)
 
         assert e24py.E24sess.default_session == test_inst_2
 
-        test_inst_3 = e24py.E24sess('dc1', set_default=True)
+        test_inst_3 = e24py.E24sess("EU/POZ-1", set_default=True)
 
         assert e24py.E24sess.default_session == test_inst_3
 
-        test_inst_4 = e24py.E24sess('dc1', set_default=False)
+        test_inst_4 = e24py.E24sess("EU/POZ-1", set_default=False)
 
         assert e24py.E24sess.default_session == test_inst_3
 
@@ -255,13 +255,15 @@ class TestSessionUtilities:
         session_setup.api_request = mock.MagicMock()
         session_setup.api_request.return_value = rv
 
+        session_setup.zone = "test_zone_id"
+
         r = session_setup.create_vm("test_vm", 2, 1024)
 
         expected_data = {  # data that is meant to be sent to api_request by tested method
             "create_vm": {
                 "cpus": 2,
                 "ram": 1024,
-                "zone_id": "24e12e20-0851-5354-e2c3-04b16c4c9c45",
+                "zone_id": "test_zone_id",
                 "name": "test_vm",
                 "boot_type": "image",
                 "os": "2599",
@@ -275,6 +277,22 @@ class TestSessionUtilities:
 
 class TestApiObjects:
     """Tests e24py.Apiobjects instancing and methods. We skip testing ApiObject class, as it is not called directly."""
+
+    def test_session_handling(self, session_setup):
+        """Tests proper session handling on ApiObject initialization"""
+        with pytest.raises(ValueError):
+            e24py.apiobjects.ApiObject.session_handler(None)
+
+        with pytest.raises(KeyError):
+            e24py.apiobjects.ApiObject.session_handler("False_endpoint")
+
+        handler1 = e24py.apiobjects.ApiObject.session_handler(session_setup)
+
+        session = e24py.E24sess("EU/POZ-1", set_default=True)
+        handler2 = e24py.apiobjects.ApiObject.session_handler(None)
+
+        assert handler1 == session_setup
+        assert handler2 == session
 
     @responses.activate
     def test_create_storage_volume(self, session_setup, api_call_mock):
@@ -294,7 +312,7 @@ class TestApiObjects:
         session_setup.resource_search.assert_called_once_with('storage_volume', "test_storage_id", '')
 
     @responses.activate
-    def test_storage_volume_methods(self, session_setup, api_call_mock, create_api_object):
+    def test_storage_volume_attach(self, session_setup, api_call_mock, create_api_object):
         test_storage = create_api_object("test_storage", "storage_volume", session_setup)
 
         rv, data = api_call_mock("placeholder_success")
@@ -304,27 +322,66 @@ class TestApiObjects:
 
         test_storage.attach("test_id")
 
-        session_setup.api_request.assert_called_with('POST', "/v2/storage-volumes/test_storage_id/attach",
+        session_setup.api_request.assert_called_once_with('POST', "/v2/storage-volumes/test_storage_id/attach",
                                                      {"virtual_machine_id": "test_id"})
+
+    @responses.activate
+    def test_storage_volume_attach(self, session_setup, api_call_mock, create_api_object):
+        test_storage = create_api_object("test_storage", "storage_volume", session_setup)
+
+        rv, data = api_call_mock("placeholder_success")
+
+        session_setup.api_request = mock.MagicMock()
+        session_setup.api_request.return_value = rv
+
         test_storage.detach()
 
-        session_setup.api_request.assert_called_with('POST', "/v2/storage-volumes/test_storage_id/detach")
+        session_setup.api_request.assert_called_once_with('POST', "/v2/storage-volumes/test_storage_id/detach")
+
+    @responses.activate
+    def test_storage_volume_detach(self, session_setup, api_call_mock, create_api_object):
+        test_storage = create_api_object("test_storage", "storage_volume", session_setup)
+
+        rv, data = api_call_mock("placeholder_success")
+
+        session_setup.api_request = mock.MagicMock()
+        session_setup.api_request.return_value = rv
+
+        test_storage.attach("test_id")
+
+        session_setup.api_request.assert_called_once_with('POST', "/v2/storage-volumes/test_storage_id/attach",
+                                                     {"virtual_machine_id": "test_id"})
+
+    @responses.activate
+    def test_storage_volume_update(self, session_setup, api_call_mock, create_api_object):
+        test_storage = create_api_object("test_storage", "storage_volume", session_setup)
 
         rv, data = api_call_mock("test_storage_updated")
 
+        session_setup.api_request = mock.MagicMock()
         session_setup.api_request.return_value = rv
 
         test_storage.update()
-        session_setup.api_request.assert_called_with('GET', "/v2/storage-volumes/test_storage_id")
+        session_setup.api_request.assert_called_once_with('GET', "/v2/storage-volumes/test_storage_id")
         assert test_storage.data == data["test_storage_updated"]["storage_volume"]
         assert test_storage.size == 60
         assert test_storage.label == "updated_label"
+
+    @responses.activate
+    def test_storage_volume_delete(self, session_setup, api_call_mock, create_api_object):
+        test_storage = create_api_object("test_storage", "storage_volume", session_setup)
+
+        rv, data = api_call_mock("placeholder_success")
+
+        session_setup.api_request = mock.MagicMock()
+        session_setup.api_request.return_value = rv
 
         test_storage.delete()
         with pytest.raises(KeyError):
             assert session_setup.objects[test_storage.id] != test_storage
 
-        session_setup.api_request.assert_called_with('DELETE', "/v2/storage-volumes/test_storage_id")
+        session_setup.api_request.assert_called_once_with('DELETE', "/v2/storage-volumes/test_storage_id")
+
 
     @responses.activate
     def test_create_vm(self, session_setup, create_api_object, api_call_mock):
