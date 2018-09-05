@@ -280,5 +280,72 @@
       },
       "attach_time":"2018-08-17 21:53:34"
 		}
-   }
+   },
+   "test_vm":{
+      "id":"test_vm_id",
+      "label":null,
+      "size":40,
+      "cost_per_hour":null,
+      "system_disk":true,
+      "type":"hdd",
+      "owner":{  
+         "id":"test_owner_id",
+         "name":"test_owner_name"
+      },
+      "zone":{  
+         "id":"24e12e20-0851-5354-e2c3-04b16c4c9c45",
+         "name":"EU/POZ-1"
+      },
+      "task":[  
+
+      ],
+      "virtual_machine":{  
+         "id":"test_vm_id",
+         "label":"test_vm_label"
+      },
+      "attach_time":"2017-08-17 21:53:34"
+   },
+   	"test_init_vm": {
+			"id": "test_vm_id",
+			"label": "test_label",
+			"systemName": "Ubuntu 17.04",
+			"system": {
+				"name": "Ubuntu 17.04",
+				"id": "2449bc31-6d92-015b-5c44-5e9c0a07aaba"
+			},
+			"cost_per_hour": 0.02,
+			"state": "online",
+			"transfer_used": "0.00",
+			"owner": {
+				"id": "test_owner_id",
+				"name": "test_owner_name"
+			},
+			"public_interface": {
+				"primary_ip_ipv4address": "255.255.255.255",
+				"mac_address": "ff:ff:ff:ff:ff:ff",
+				"ipv4_addresses": [{
+					"ipv4_address": "255.255.255.255",
+					"id": "test_ip_id",
+					"attach_time": "2018-08-15 14:34:14",
+					"dhcp": true
+				}]
+			},
+			"storage_volumes": [{
+				"id": "test_storage_id",
+				"size": 40,
+				"system_disk": true,
+				"type": "hdd",
+				"attach_time": "2018-08-15 14:34:16"
+			}],
+			"zone": {
+				"id": "test_zone_id",
+				"name": "EU/POZ-1"
+			},
+			"cores": 1,
+			"ram": 512,
+			"adm": false,
+			"autoscaler": {
+				"active": false
+			}
+		}
 }

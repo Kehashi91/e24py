@@ -42,20 +42,15 @@ class ApiObject():
         self.type = type
         self.id = request['id']
         self.label = request['label']
-        self.session.objects[self.id] = self
-    
-
+        self.session.objects[self.id] = self 
         
     def update(self):
             
         url = "/v2/{}/{}".format(TYPEMAP[self.type]['urlname'], self.id)
         
         r =  self.session.api_request("GET", url)
-        print (r.json())
-        print (".......")
         self.data = r.json()[self.type]
-        print (self.data)
-
+        
         attributes = [attribute for attribute in dir(self) if not callable(getattr(self, attribute)) and not attribute.startswith("__")]
         
         attributes.remove('id')
@@ -79,9 +74,10 @@ class VirtualMachine(ApiObject):
     
     def __init__(self, id='', label='', session=None):
         super(VirtualMachine, self).__init__(type='virtual_machine', id=id, label=label, session=session)
+        self.state = self.data['state']
         self.cores = self.data['cores']
         self.ram = self.data['ram']
-        self.storage_volumes = [StorageVolume(storage['id']) for storage in self.data['storage_volumes']]
+        self.storage_volumes = [StorageVolume(storage['id'], session=self.session) for storage in self.data['storage_volumes']]
 
     def delete(self):
         super(VirtualMachine, self).delete()
@@ -92,19 +88,23 @@ class VirtualMachine(ApiObject):
 
     def power_on(self):
         r = self.session.api_request('POST', "/v2/virtual-machines/{}/poweron".format(self.id))
-        if r.json()["success"]:
-            print("hurray!")
+
+    def shutdown(self, wait_for=None):
+        if wait_for:
+            wait_for = {"wait_for": wait_for}
+
+        r = self.session.api_request('POST', "/v2/virtual-machines/{}/poweroff".format(self.id), wait_for)
 
     def power_off(self):
         r = self.session.api_request('POST', "/v2/virtual-machines/{}/poweroff".format(self.id))
-        if r.json()["success"]:
-            print("hurray!")
+
+    def reboot(self):
+        r = self.session.api_request('POST', "/v2/virtual-machines/{}/reboot".format(self.id))
 
     def resize(self, cores, memory):
         resize_amount = {"cores": cores, "ram": memory}
 
         self.session.api_request('POST', "/v2/virtual-machines/{}/resize".format(self.id), resize_amount)
-
 
 
 class StorageVolume(ApiObject):
@@ -130,7 +130,4 @@ class DiscImage(ApiObject):
     """Represents a disc image resource."""
 
     def __init__(self,  id='', label='', session=None):
-        super(DiscImage, self).__init__(type='disk_image', id=id, label=label, session=session)
-    
-
-    
+        super(DiscImage, self).__init__(type='disk_image', id=id, label=label, session=session)   

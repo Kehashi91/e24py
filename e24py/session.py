@@ -58,9 +58,9 @@ class E24sess():
 
         headers = {'Content-type': 'application/json', 'X-Date': formatdate(usegmt=True), 'Authorization': authstring}
 
-        return self.request_dispatch(method, headers, url, data)
+        return self._request_dispatch(method, headers, url, data)
 
-    def request_dispatch(self, method, headers, url, data):
+    def _request_dispatch(self, method, headers, url, data):
         """Sends the request prepared by previous method and makes sure the response from the server is valid and 
         succeded.
         """
@@ -137,7 +137,7 @@ class E24sess():
             raise ApiRequestFailed("Endpoint {} zone info not found:\njson info:\n{}".format(self.endpoint, r.json()))
 
 
-    def create_vm(self, name, cpu, memory):
+    def create_vm(self, name, cpu, memory, os, password=None, key_id=None, user_data=None):
         """This method is used to request the API to create a new vm. As the response
         for this request contains only vm id, it is insufficient to instantiate a VirtualMachine
         object. It also cannot call VirtualMachine contructor right after an ID is returned, as there
@@ -153,11 +153,16 @@ class E24sess():
                 "zone_id": self.zone,
                 "name": name,
                 "boot_type": "image",
-                "os": "2599",
-                "password": "placeholder123placeholder123",
+                "os": os,
             }
         }
-
+        if password:
+            params["create_vm"]["password"] = password
+        if key_id:
+            params["create_vm"]["key_id"] = key_id
+        if user_data:
+            params["create_vm"]["user_data"] = user_data
+            
         r = self.api_request('PUT', "/v2/virtual-machines", params)
         print(r.json())
         return r.json()["virtual_machine"]["id"]

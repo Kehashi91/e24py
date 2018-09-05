@@ -257,7 +257,7 @@ class TestSessionUtilities:
 
         session_setup.zone = "test_zone_id"
 
-        r = session_setup.create_vm("test_vm", 2, 1024)
+        r = session_setup.create_vm("test_vm", 2, 1024, 2599, "placeholder_password")
 
         expected_data = {  # data that is meant to be sent to api_request by tested method
             "create_vm": {
@@ -266,8 +266,8 @@ class TestSessionUtilities:
                 "zone_id": "test_zone_id",
                 "name": "test_vm",
                 "boot_type": "image",
-                "os": "2599",
-                "password": "placeholder123placeholder123",
+                "os": 2599,
+                "password": "placeholder_password",
             }
         }
 
@@ -306,24 +306,11 @@ class TestApiObjects:
 
         assert storage.id == "test_storage_id"
         assert storage.data == data["test_storage"]
+        assert storage.session == session_setup
         assert not storage.label
         assert storage.size == 40
         assert session_setup.objects[storage.id] == storage
         session_setup.resource_search.assert_called_once_with('storage_volume', "test_storage_id", '')
-
-    @responses.activate
-    def test_storage_volume_attach(self, session_setup, api_call_mock, create_api_object):
-        test_storage = create_api_object("test_storage", "storage_volume", session_setup)
-
-        rv, data = api_call_mock("placeholder_success")
-
-        session_setup.api_request = mock.MagicMock()
-        session_setup.api_request.return_value = rv
-
-        test_storage.attach("test_id")
-
-        session_setup.api_request.assert_called_once_with('POST', "/v2/storage-volumes/test_storage_id/attach",
-                                                     {"virtual_machine_id": "test_id"})
 
     @responses.activate
     def test_storage_volume_attach(self, session_setup, api_call_mock, create_api_object):
@@ -384,6 +371,21 @@ class TestApiObjects:
 
 
     @responses.activate
-    def test_create_vm(self, session_setup, create_api_object, api_call_mock):
+    def test_init_vm(self, session_setup, create_api_object, api_call_mock):
         """This method is not using the create_api_object as it simulates normal flow when instancing objects."""
-        pass
+
+        rv, data = api_call_mock("test_init_vm")
+
+        session_setup.resource_search = mock.MagicMock()
+        session_setup.resource_search.return_value = rv.json()
+
+        with mock.patch.object(e24py.StorageVolume, "__init__", mock.Mock(return_value=None)):
+            e24py.StorageVolume.id = "mock_storage_id"
+            vm = e24py.VirtualMachine(id="test_vm_id", session=session_setup)
+            assert vm.id == "test_vm_id"
+            assert vm.label == "test_label"
+            assert vm.state == "online"
+            assert vm.session == session_setup
+            assert vm.storage_volumes[0].id == "mock_storage_id"
+            assert session_setup.objects[vm.id] == vm
+            session_setup.resource_search.assert_called_once_with('virtual_machine', "test_vm_id", '')
