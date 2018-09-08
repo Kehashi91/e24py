@@ -15,20 +15,19 @@ Check if we can activate responses globally
 Fix api_call_mock minor bug (more in docstring)
 Rarely checking authstring will not work (more in docstring)
 """
-
-
-import pytest
-import responses
-from unittest import mock
-
 import e24py
 
+import logging
+import pytest
+import responses
 import hmac, hashlib, base64
 import json
 import requests
 
+from unittest import mock
 from email.utils import formatdate
 
+logging.disable(logging.CRITICAL)
 
 @pytest.fixture()
 def session_setup(request):
@@ -278,22 +277,6 @@ class TestSessionUtilities:
 class TestApiObjects:
     """Tests e24py.Apiobjects instancing and methods. We skip testing ApiObject class, as it is not called directly."""
 
-    def test_session_handling(self, session_setup):
-        """Tests proper session handling on ApiObject initialization"""
-        with pytest.raises(ValueError):
-            e24py.apiobjects.ApiObject.session_handler(None)
-
-        with pytest.raises(KeyError):
-            e24py.apiobjects.ApiObject.session_handler("False_endpoint")
-
-        handler1 = e24py.apiobjects.ApiObject.session_handler(session_setup)
-
-        session = e24py.E24sess("EU/POZ-1", set_default=True)
-        handler2 = e24py.apiobjects.ApiObject.session_handler(None)
-
-        assert handler1 == session_setup
-        assert handler2 == session
-
     @responses.activate
     def test_create_storage_volume(self, session_setup, api_call_mock):
         """This method is not using the create_api_object as it simulates normal flow when instancing objects."""
@@ -389,3 +372,6 @@ class TestApiObjects:
             assert vm.storage_volumes[0].id == "mock_storage_id"
             assert session_setup.objects[vm.id] == vm
             session_setup.resource_search.assert_called_once_with('virtual_machine', "test_vm_id", '')
+
+        with pytest.raises(AttributeError):
+             vm = e24py.VirtualMachine(id="test_vm_id")

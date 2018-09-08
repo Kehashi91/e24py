@@ -7,6 +7,7 @@ a range of utility methods that interact with the API.
 
 
 import requests
+import logging
 
 import hmac, hashlib, base64
 import json
@@ -72,19 +73,7 @@ class E24sess():
         request = self.session.prepare_request(request)
         request = self.session.send(request)
         
-   
-        #write to file (TODO: move to debug mode)
-        with open('data.json', 'a') as out:
-            out.write("url:\n")
-            out.write(url)
-            out.write("Headers:\n")
-            out.write(str(headers))
-            out.write("status:\n")
-            out.write(str(request.status_code))
-            out.write("response:\n")
-            #json.dump(request.json(), out)
-            out.write("\n")
-
+        logging.info("Sending request, url: {} headers: {} status: {}".format(url, str(headers), request.status_code))
 
         if request.status_code == 404:  # Necessary before we access request.json() to avoid JSONDecodeError
             raise ApiRequestFailed("Status Code: {} \n No Json response".format(request.status_code))
@@ -164,7 +153,6 @@ class E24sess():
             params["create_vm"]["user_data"] = user_data
             
         r = self.api_request('PUT', "/v2/virtual-machines", params)
-        print(r.json())
         return r.json()["virtual_machine"]["id"]
 
 
