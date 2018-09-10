@@ -16,24 +16,28 @@ pip install -r requirements.txt
 or install dependencies manually:
 ```
 pip install requests
-pip install responses
+pip install responses #optional if you don't want to run tests
 pip install pytest #optional if you don't want to run tests
 ```
-4. Export your e24cloud API access key and secret key:
+4. Export your e24cloud API access key and secret key as enviromental variables:
 ```
 export E24_KEY='YOUR_KEY'
 export E24_SECRET='YOUR_SECRET_KEY'
+```
+5. Optionally, you can run unit tests:
+```
+python -m pytest
 ```
 
 ## Basic usage
 
 First, you need to create a session instance. It is bound to single API endpoint, and all other methods require an
-instance. Currently there are 2 endpoints, labeled "dc1" and "dc2".
+instance. Currently there are 2 endpoints, labeled "EU/POZ-1" and "EU/POZ-2".
 
 ```
 import e24py
 
-session = e24py.E24sess(endpoint="dc1")
+session = e24py.E24sess(endpoint="EU/POZ-1")
 ```
 If session is specified this way, it will become a default session and all other methods will use it by default (unless
 told to use diffrent session explicitly). We can now bind our cloud resources to Python objects, for example:
