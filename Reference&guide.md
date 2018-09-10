@@ -46,20 +46,20 @@ This method facilitates e24py.E24sess.api_request to search for a resource, eith
 ### method e24py.E24sess.create_vm(self, name, cpu, memory, os, password)
 ### method e24py.E24sess.get_os(self)
 Returns a dictionary of all os templates aviable to the user. Template id's are the keys, and the values are itself a dictionary containing all aviable template information
-##class e24py.ApiObject(self, type, id="", label="", session=E24sess.default_session)
+## class e24py.ApiObject(self, type, id="", label="", session=E24sess.default_session)
 Base class for (almost) all resources returned by the API. All it's methods and attributes are abiable to other classes.
-###method e24py.ApiObject.update()
+### method e24py.ApiObject.update()
 Updates all instance attributes based on a fresh GET resource request
-###method e24py.ApiObject.delete()
+### method e24py.ApiObject.delete()
 Sends DELETE request, and also cleans E24sess.objects from this instance.
 ## class e24py.VirtualMachine(ApiObject)(self, id='', label='', session=E24sess.default_session)
-###method e24py.VirtualMachine.resize(cpu, ram)
-###method e24py.VirtualMachine.shutdown(self, wait_for=None)
-###method e24py.VirtualMachine.power_off(self):
-###method e24py.VirtualMachine.reboot(self):
-###method e24py.ApiObject.resize(cpu, ram)
+### method e24py.VirtualMachine.resize(cpu, ram)
+### method e24py.VirtualMachine.shutdown(self, wait_for=None)
+### method e24py.VirtualMachine.power_off(self):
+### method e24py.VirtualMachine.reboot(self):
+### method e24py.ApiObject.resize(cpu, ram)
 ## class e24py.StorageVolume(ApiObject)(self, id='', label='', session=E24sess.default_session)
-###method e24py.StorageVolume.attach(self, vmid)
-###method e24py.StorageVolume.def detach(self)
-###method e24py.StorageVolume.create_image(self, label)
+### method e24py.StorageVolume.attach(self, vmid)
+### method e24py.StorageVolume.def detach(self)
+### method e24py.StorageVolume.create_image(self, label)
 ## class e24py.DiscImage(ApiObject)(self, id='', label='', session=E24sess.default_session)
