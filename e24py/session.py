@@ -26,7 +26,7 @@ class ApiRequestFailed(Exception):
     def __init__(self, msg=None, session=None):
         if session:
             logging.error("An {} exception occured: {} - for endpoint: {}".format(
-                __class__.__name__, msg, session.endpoint_label))
+                __class__.__name__, msg, session.endpoint))
         else:
             logging.error("An {} exception occured: {}".format(
                 __class__.__name__, msg))
@@ -41,12 +41,12 @@ class E24sess():
 
     default_session = None
 
-    def __init__(self, endpoint="EU/POZ-1", set_default=True):
+    def __init__(self, endpoint="DC1/PUBLIC-1", set_default=True):
         if endpoint not in ENDPOINTS:
             raise KeyError("Valid endpoints are: {}".format(ENDPOINTS.keys()))
 
         self.session = requests.Session() # request.Session is instance-bound
-        self.endpoint_label = endpoint
+        self.endpoint = endpoint
         self.objects = {}
         self.zone = None # lazy init
         if set_default:
@@ -58,7 +58,7 @@ class E24sess():
         else:
             is_default = False
         return "{} object default_session={}, endpoint={} at {}".format(
-            __class__.__name__, is_default, self.endpoint_label, hex(id(self)))
+            __class__.__name__, is_default, self.endpoint, hex(id(self)))
 
     def api_request(self, method, path, data=None):
         """
@@ -66,7 +66,7 @@ class E24sess():
         data requeired to make an API request. It passess the data to 
         request_dispatch that handles actually sending the request."""
 
-        short_url = ENDPOINTS[self.endpoint_label]
+        short_url = ENDPOINTS[self.endpoint]
         full_url = "https://{}{}".format(short_url, path)
 
         if data:
@@ -104,8 +104,8 @@ class E24sess():
         request = self.session.prepare_request(request)
         try:
             request = self.session.send(request)
-            logging.info("Sending request, url: {} headers: {} status: {}".format(
-                url, str(headers), request.status_code))
+            logging.info("Sending request, url: {} headers: {} status: {} response:\n{}".format(
+                url, str(headers), request.status_code, request.json()))
             if not request.json()['success'] or not request.ok:
                 raise ApiRequestFailed(("Status Code: {} \n Response: \n {}").format(
                                         request.json(), request.status_code), self)
@@ -155,7 +155,7 @@ class E24sess():
         r = self.api_request("GET", '/v2/regions')
 
         for zone in r.json()['regions']:
-            if zone['zones'][0]['label'] == self.endpoint_label:
+            if zone['zones'][0]['label'] == self.endpoint:
                 self.zone = zone['zones'][0]['id']
         if not self.zone:
             raise ApiRequestFailed(

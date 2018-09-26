@@ -8,14 +8,19 @@ from .session import E24sess, ApiRequestFailed
 from .globals import TYPEMAP
 
 
+
 class ApiObject():
     """Base class that includes all methods and properties common for API 
     resources. Also includes handler for proper session object.
     """
 
-    def __init__(self, type, id="", label="", session=E24sess.default_session):
+    def __init__(self, type, id="", label="", session=None):
 
-        self.session = session
+        if not session:
+            # We cant put default session directly in init parameters, since default session is always empty on import.
+            self.session = E24sess.default_session
+        else:
+            self.session = session
 
         if not id and not label:
             raise ValueError('Cannot find resource without ID or label.')
@@ -65,6 +70,8 @@ class VirtualMachine(ApiObject):
     """Represents a vm resource."""
 
     def __init__(self, id='', label='', session=E24sess.default_session):
+        print (E24sess.default_session)
+        print (session)
         super().__init__(type='virtual_machine', id=id, label=label, session=session)
         self.state = self.data['state']
         self.cores = self.data['cores']
@@ -106,7 +113,7 @@ class StorageVolume(ApiObject):
     """Represents a storage resource."""
 
     def __init__(self,  id='', label='', session=E24sess.default_session):
-        super().__init__(type='storage_volume', id=id, label=label, 
+        super().__init__(type='storage_volume', id=id, label=label,
                          session=session)
         self.size = self.data['size']
 

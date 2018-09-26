@@ -35,7 +35,7 @@
 			}],
 			"zone": {
 				"id": "test_zone_id",
-				"name": "EU/POZ-1"
+				"name": "DC1/PUBLIC-1"
 			},
 			"cores": 1,
 			"ram": 512,
@@ -81,7 +81,7 @@
 			}],
 			"zone": {
 				"id": "test_zone_id",
-				"name": "EU/POZ-1"
+				"name": "DC1/PUBLIC-1"
 			},
 			"cores": 1,
 			"ram": 512,
@@ -127,7 +127,7 @@
 			}],
 			"zone": {
 				"id": "test_zone_id",
-				"name": "EU/POZ-1"
+				"name": "DC1/PUBLIC-1"
 			},
 			"cores": 1,
 			"ram": 512,
@@ -170,7 +170,7 @@
 			}],
 			"zone": {
 				"id": "test_zone_id",
-				"name": "EU/POZ-1"
+				"name": "DC1/PUBLIC-1"
 			},
 			"cores": 1,
 			"ram": 512,
@@ -213,7 +213,7 @@
 			}],
 			"zone": {
 				"id": "test_zone_id",
-				"name": "EU/POZ-1"
+				"name": "DC1/PUBLIC-1"
 			},
 			"cores": 1,
 			"ram": 512,
@@ -243,7 +243,7 @@
       },
       "zone":{  
          "id":"24e12e20-0851-5354-e2c3-04b16c4c9c45",
-         "name":"EU/POZ-1"
+         "name":"DC1/PUBLIC-1"
       },
       "task":[  
 
@@ -269,7 +269,7 @@
       },
       "zone":{
          "id":"24e12e20-0851-5354-e2c3-04b16c4c9c45",
-         "name":"EU/POZ-1"
+         "name":"DC1/PUBLIC-1"
       },
       "task":[
 
@@ -294,7 +294,7 @@
       },
       "zone":{  
          "id":"24e12e20-0851-5354-e2c3-04b16c4c9c45",
-         "name":"EU/POZ-1"
+         "name":"DC1/PUBLIC-1"
       },
       "task":[  
 
@@ -339,7 +339,7 @@
 			}],
 			"zone": {
 				"id": "test_zone_id",
-				"name": "EU/POZ-1"
+				"name": "DC1/PUBLIC-1"
 			},
 			"cores": 1,
 			"ram": 512,

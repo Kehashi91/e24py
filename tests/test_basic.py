@@ -38,7 +38,7 @@ def session_setup(request):
 
     request.addfinalizer(finalizer)
 
-    return e24py.E24sess("EU/POZ-1", set_default=False)
+    return e24py.E24sess("DC1/PUBLIC-1", set_default=False)
 
 
 @pytest.fixture()
@@ -120,15 +120,15 @@ class TestSessionInitialization:
 
         assert not e24py.E24sess.default_session
 
-        test_inst_2 = e24py.E24sess("EU/POZ-1", set_default=True)
+        test_inst_2 = e24py.E24sess("DC1/PUBLIC-1", set_default=True)
 
         assert e24py.E24sess.default_session == test_inst_2
 
-        test_inst_3 = e24py.E24sess("EU/POZ-1", set_default=True)
+        test_inst_3 = e24py.E24sess("DC1/PUBLIC-1", set_default=True)
 
         assert e24py.E24sess.default_session == test_inst_3
 
-        test_inst_4 = e24py.E24sess("EU/POZ-1", set_default=False)
+        test_inst_4 = e24py.E24sess("DC1/PUBLIC-1", set_default=False)
 
         assert e24py.E24sess.default_session == test_inst_3
 

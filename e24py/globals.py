@@ -7,8 +7,8 @@ APISECRET = os.getenv("E24_SECRET")
 
 # Endpoints keys are meant to be consistent with /v2/zones labels
 ENDPOINTS = {
-		"EU/POZ-1": "eu-poland-1poznan.api.e24cloud.com",
-		"EU/POZ-2": "eu-poland-1poznan2.api.e24cloud.com"
+		"DC1/PUBLIC-1": "eu-poland-1poznan.api.e24cloud.com",
+		"DC2/PUBLIC-1": "eu-poland-1poznan2.api.e24cloud.com"
 			}
 
 """
